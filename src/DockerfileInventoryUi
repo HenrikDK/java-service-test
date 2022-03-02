@@ -1,0 +1,15 @@
+FROM maven:3.8.4 AS build-env
+WORKDIR /app
+
+# Copy everything and build
+COPY Inventory/ ./
+RUN mvn clean package
+
+# Build runtime image
+FROM openjdk:17-alpine
+COPY --from=build-env app/inventory-ui/target/app.jar app/app.jar
+
+ENV APP_ENV=dev 
+RUN addgroup -S spring && adduser -S spring -G spring
+USER spring:spring
+ENTRYPOINT ["java", "-jar", "app/app.jar"]
